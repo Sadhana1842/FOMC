@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
 # Load pre-trained fine-tuned model and tokenizer from Hugging Face's public model hub
-model_name = "Respair / deberta-v3-large-finetuned-style"  # DeBERTa model fine-tuned on IMDB sentiment analysis
+model_name = "Respair/deberta-v3-large-finetuned-style"  # Using Respair's fine-tuned DeBERTa model
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 

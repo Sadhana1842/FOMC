@@ -1,17 +1,12 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# Load pre-trained fine-tuned model and tokenizer
-model_name = "microsoft/deberta-v3-large-finetuned-sst2"
+# Load pre-trained fine-tuned model and tokenizer from kibru's model
+model_name = "kibru/deberta-v3-large-finetuned-sst2"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
-# Define device
-import torch
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
-
-# Define sentiment analysis pipeline
-sentiment_analyzer = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, device=0 if torch.cuda.is_available() else -1)
+# Define sentiment analysis pipeline (no need for manual device handling)
+sentiment_analyzer = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
 
 # Function to process the statement
 def process_statement(statement):

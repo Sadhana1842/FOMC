@@ -1,32 +1,29 @@
-import streamlit as st
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
-# Load the DeBERTa model and tokenizer
-model_name = "microsoft/deberta-v3-large"
+# Load pre-trained fine-tuned model and tokenizer
+model_name = "microsoft/deberta-v3-large-finetuned-sst2"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=3)  # Assuming 3 labels: positive, negative, neutral
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
+
+# Define device
+import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
-# Label map
-label_map = {0: "neutral", 1: "positive", 2: "negative"}
-
-# Function to analyze sentiment for a single line
-def analyze_sentiment(line):
-    inputs = tokenizer(line, return_tensors="pt", truncation=True, max_length=512)
-    inputs = {key: value.to(device) for key, value in inputs.items()}
-
-    with torch.no_grad():
-        outputs = model(**inputs)
-    predicted_label = torch.argmax(outputs.logits).item()
-    return label_map[predicted_label]
+# Define sentiment analysis pipeline
+sentiment_analyzer = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, device=0 if torch.cuda.is_available() else -1)
 
 # Function to process the statement
 def process_statement(statement):
     lines = statement.split('.')
-    sentiments = [analyze_sentiment(line.strip()) for line in lines if line.strip()]  # Avoid empty lines
-
+    sentiments = []
+    
+    for line in lines:
+        line = line.strip()
+        if line:  # Avoid empty lines
+            result = sentiment_analyzer(line)
+            sentiments.append(result[0]['label'].lower())
+    
     positive_count = sentiments.count('positive')
     negative_count = sentiments.count('negative')
     neutral_count = sentiments.count('neutral')
@@ -46,19 +43,22 @@ def process_statement(statement):
     }
 
 # Streamlit app
-st.title("Sentiment Analysis with DeBERTa")
-st.write("Enter a statement to analyze its sentiment.")
+import streamlit as st
 
-# Input form
-with st.form("sentiment_form"):
-    statement = st.text_area("Enter your statement here:")
-    submitted = st.form_submit_button("Analyze Sentiment")
+st.title("Sentiment Analysis App")
+st.write("Enter a statement below to analyze its sentiment:")
 
-# Display results
-if submitted and statement:
-    result = process_statement(statement)
-    st.subheader("Sentiment Analysis Results:")
-    st.write(f"**Positive Percentage:** {result['Positive Percentage']:.2f}%")
-    st.write(f"**Negative Percentage:** {result['Negative Percentage']:.2f}%")
-    st.write(f"**Neutral Percentage:** {result['Neutral Percentage']:.2f}%")
-    st.write(f"**Overall Sentiment:** {result['Overall Sentiment']}")
+# Input Text Area
+user_input = st.text_area("Your statement:", placeholder="Type here...")
+
+# Button to analyze sentiment
+if st.button("Analyze Sentiment"):
+    if user_input.strip():
+        result = process_statement(user_input)
+        st.subheader("Sentiment Analysis Results:")
+        st.write(f"**Positive Percentage:** {result['Positive Percentage']:.2f}%")
+        st.write(f"**Negative Percentage:** {result['Negative Percentage']:.2f}%")
+        st.write(f"**Neutral Percentage:** {result['Neutral Percentage']:.2f}%")
+        st.write(f"**Overall Sentiment:** {result['Overall Sentiment'].capitalize()}")
+    else:
+        st.warning("Please enter a statement to analyze.")

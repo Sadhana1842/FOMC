@@ -1,5 +1,4 @@
 pip>=24.3.1
 transformers==4.35.0
-torch
 streamlit
 sentencepiece

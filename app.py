@@ -1,8 +1,8 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 
 # Load pre-trained fine-tuned model and tokenizer from Hugging Face's public model hub
-model_name = "Respair/deberta-v3-large-finetuned-style"  # Using Respair's fine-tuned DeBERTa model
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+model_name = "microsoft/deberta-v3-large"  # Using Respair's fine-tuned DeBERTa model
+tokenizer = AutoTokenizer.from_pretrained(model_name,use_fast=False)
 model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
 # Define sentiment analysis pipeline (no need for manual device handling)
